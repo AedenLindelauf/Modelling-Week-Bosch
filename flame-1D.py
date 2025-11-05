@@ -41,9 +41,16 @@ for t in range(1, Nt):
         #G_old = G.copy()
         #phi_old = phi.copy()
 
+        # Formula to update local equivalence ratio - formula found explicitly
+        # (because the differential equation for it is linear)
         phi[y, t] = (dx * phi[y, t-1] + dt * u[y-1] * phi[y-1, t]) / (dx + dt * u[y-1])
+
+        # Local laminal flame speed
         #s_L = A * (phi[y,t] ** B) * np.exp(-C * (phi[y,t] - D) ** 2)
         s_L = s_L_constant
+
+        # Local value of G, from the G equation.
+        # Resulting equation (for G[x,t]) cannot be solved explicitly, so use fsolve instead
         def diff_eq(z):
             return (z - G[y, t-1])/dt + u[y-1] * (z - G[y-1, t])/dx - s_L * abs(z - G[y-1, t])/dx
         G[y, t] = sp.fsolve(diff_eq, x0 = G[y-1, t])[0]
