@@ -3,38 +3,67 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib.colors import SymLogNorm
 
-# --- Constants (from your original) ---
-A, B, C, D = 0.6079, -2.554, 7.31, 1.23
+# --- Fuel gas ---
+# M = methane, H = hydrogen
+gas = "M"
 
-# --- Domain discretization (from your original) ---
-x0, xN, dx = 0.0, 0.6, 0.005
-y0, yN, dy = 0.0, 0.6, 0.005
-t_final, dt = 5.0, 0.01
-radius = 0.1
-centre = xN / 2
+if gas == "M":
+    def get_s_L(phi):
+        A, B, C, D = 0.6079, -2.554, 7.31, 1.23
+        return A * (phi ** B) * np.exp(-C * (phi - D) ** 2)
+elif gas == "H":
+    def get_s_L(phi):
+        A, B, C, D = -1.11019, 4.65167, -1.44347, 0.04868
+        return A + B * phi + C * phi ** 2 + D * phi ** 3
+else:
+    print(">:(")
 
-# build grids
+
+
+# --- Domain discretization ---
+x0, xN, dx = 0.0, 0.3, 0.005
+y0, yN, dy = 0.0, 0.3, 0.005
+t_final, dt = 1.0, 0.002
+radius = 0.14
+centre = (xN - x0) / 2
+
+# --- Build grids ---
 x = np.arange(x0, xN + 1e-12, dx)
 y = np.arange(y0, yN + 1e-12, dy)
 Nx = len(x)
 Ny = len(y)
 Nt = int(round(t_final / dt)) + 1
-
-# --- Initialize G and phi arrays ---
 G = np.zeros((Nx, Ny, Nt))
-phi = np.ones((Nx, Ny, Nt)) * 0.5
+
+# --- Constants ---
+St = 10
+K = 5
+eps_a = 0.2
+eps_phi = -eps_a
+
+# --- Equivalence ratio ---
+PHI = 0.5
+phi = np.ones((Nx, Ny, Nt)) * PHI
+for n in range(Nt):
+    t = n * dt
+    for j in range(Ny):
+        for i in range(Nx):
+            y_ = j * dy
+            phi[i, j, n] = PHI * (1 + eps_phi * np.sin(St * (t - y_)))
 
 # --- Flame speed constant used to compute M (steady solution) ---
-s_L_constant = 0.0725887
+s_L_constant = get_s_L(PHI)
 
 # --- Velocity field ---
-eps = 0.3
-omega = 20
-
-U = 3 * s_L_constant
+U = 2 * s_L_constant
 u_x = np.zeros((Nx, Ny))
 u_y = np.ones((Nx, Ny)) * U
 u_y_full = np.zeros((Nx, Ny, Nt))
+for i in range(Nx):
+    for j in range(Ny):
+        y_ = j * dy
+        u_y[i, j] = U * (1 + eps_a * np.sin(St * (0 - K * y_)))
+        u_y_full[i, j, 0] = U * (1 + eps_a * np.sin(St * (0 - K * y_)))
 
 # compute slope M so that s_L * sqrt(M^2 + 1) = U
 # (make sure U/s_L_constant >= 1)
@@ -81,7 +110,8 @@ for n in range(1, Nt):
     t = n * dt
     for j in range(Ny):
         for i in range(Nx):
-            u_y[i, j] = U * (1 + eps * np.sin(omega * (t - j*dy)))
+            y_ = j * dy
+            u_y[i, j] = U * (1 + eps_a * np.sin(St * (t - K * y_)))
             #u_y[i, j] = s_L_constant + (U - s_L_constant) * (2 ** -t)
             u_y_full[i, j, n] = u_y[i, j]
     
@@ -91,7 +121,7 @@ for n in range(1, Nt):
         G_new[ii, 0] = M * (abs(x[ii] - centre) - radius) + 0.0
 
     # interior points update (i indexes x, j indexes y)
-    for j in range(1, Ny - 1):       # avoid top row (Ny-1) because we treat it as outflow
+    for j in range(1, Ny):       # avoid top row (Ny-1) because we treat it as outflow
         for i in range(1, Nx - 1):   # avoid left (0) and right (Nx-1)
             # upwind/backward differences because u_x >= 0? here u_x == 0 so dx contribution zero
             # but implement general form:
@@ -106,7 +136,7 @@ for n in range(1, Nt):
                 dGdy = (G_prev[i, j + 1] - G_prev[i, j]) / dy
 
             # local laminar flame speed (using phi at previous time)
-            s_L = A * (phi[i, j, n - 1] ** B) * np.exp(-C * (phi[i, j, n - 1] - D) ** 2)
+            s_L = get_s_L(phi[i, j, n - 1])
 
             grad_norm = np.sqrt(dGdx * dGdx + dGdy * dGdy)
 
@@ -135,35 +165,37 @@ print("G initial min/max:", G[:, :, 0].min(), G[:, :, 0].max())
 print("G final min/max:  ", G[:, :, -1].min(), G[:, :, -1].max())
 
 
+def plot_scalar_field(data, name):
+    fig, ax = plt.subplots(figsize=(6,6))
 
-fig, ax = plt.subplots(figsize=(6,6))
+    frame0 = data[:, :, 0].T
+    im = ax.imshow(frame0, extent=[x[0], x[-1], y[0], y[-1]],
+                origin='lower', aspect='auto', cmap="coolwarm", vmin=np.min(data), vmax=np.max(data))
 
-frame0 = u_y_full[:, :, 0].T
-im = ax.imshow(frame0, extent=[x[0], x[-1], y[0], y[-1]],
-               origin='lower', aspect='auto', cmap="coolwarm", vmin = U * (1 - eps), vmax = U * (1 + eps))
+    cbar = plt.colorbar(im, ax=ax)
+    cbar.set_label(f"{name} value")
 
-cbar = plt.colorbar(im, ax=ax)
-cbar.set_label("u_y value")
+    ax.set_title(f"{name}(x,y,t=0)")
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
 
-ax.set_title("u_y(x,y,t=0)")
-ax.set_xlabel("x")
-ax.set_ylabel("y")
+    def update(frame):
+        im.set_data(data[:, :, frame].T)
+        ax.set_title(f"{name}(x,y,t={round(frame * dt, 4)})")
+        return [im]
 
-def update(frame):
-    im.set_data(u_y_full[:, :, frame].T)
-    ax.set_title(f"u_y(x,y,t={round(frame * dt, 4)})")
-    return [im]
+    ani = FuncAnimation(
+        fig,
+        update,
+        frames=G.shape[2],
+        interval=int(1000 * dt),
+        blit=False
+    )
 
-ani = FuncAnimation(
-    fig,
-    update,
-    frames=G.shape[2],
-    interval=int(1000 * dt),
-    blit=False
-)
+    plt.show()
 
-plt.show()
-
+plot_scalar_field(u_y_full, "u_y")
+plot_scalar_field(phi, "phi")
 
 
 
@@ -199,5 +231,6 @@ ani = FuncAnimation(
     interval=int(1000 * dt),
     blit=False
 )
+#ani.save("animation.gif", writer="pillow", fps=int(1/dt))
 
 plt.show()
