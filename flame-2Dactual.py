@@ -7,11 +7,11 @@ from matplotlib.colors import SymLogNorm
 A, B, C, D = 0.6079, -2.554, 7.31, 1.23
 
 # --- Domain discretization (from your original) ---
-x0, xN, dx = 0.0, 0.3, 0.005
-y0, yN, dy = 0.0, 0.4, 0.005
+x0, xN, dx = 0.0, 0.6, 0.005
+y0, yN, dy = 0.0, 0.6, 0.005
 t_final, dt = 5.0, 0.01
 radius = 0.1
-centre = 0.15
+centre = xN / 2
 
 # build grids
 x = np.arange(x0, xN + 1e-12, dx)
@@ -28,10 +28,10 @@ phi = np.ones((Nx, Ny, Nt)) * 0.5
 s_L_constant = 0.0725887
 
 # --- Velocity field ---
-eps = 0.1
-omega = 10
+eps = 0.3
+omega = 20
 
-U = 2 * s_L_constant
+U = 3 * s_L_constant
 u_x = np.zeros((Nx, Ny))
 u_y = np.ones((Nx, Ny)) * U
 u_y_full = np.zeros((Nx, Ny, Nt))
@@ -175,7 +175,7 @@ norm = SymLogNorm(linthresh=linthresh, vmin=np.min(G), vmax=np.max(G), base=10)
 frame0 = G[:, :, 0].T
 im = ax.imshow(frame0, extent=[x[0], x[-1], y[0], y[-1]],
                origin='lower', aspect='auto', cmap="coolwarm_r", norm=norm)
-#contour = ax.contour(np.arange(x0, xN + 1e-12, dx), np.arange(y0, yN + 1e-12, dy), G[:, :, 0].T, levels=[0.0], colors='black')
+contour = ax.contour(np.arange(x0, xN + 1e-12, dx), np.arange(y0, yN + 1e-12, dy), G[:, :, 0].T, levels=[0.0], colors='black')
 
 cbar = plt.colorbar(im, ax=ax)
 cbar.set_label("G value")
@@ -185,13 +185,11 @@ ax.set_xlabel("x")
 ax.set_ylabel("y")
 
 def update(frame):
-    #global contour
-    #for c in contour.collections:
-    #    c.remove()
+    global contour
+    contour.remove()
     im.set_data(G[:, :, frame].T)
     ax.set_title(f"G(x,y,t={round(frame * dt, 4)})")
-    #ax.contour(np.arange(x0, xN + 1e-12, dx), np.arange(y0, yN + 1e-12, dy), G[:, :, frame].T, levels=[0.0], colors='black')
-    #return [im] + contour.collections
+    contour = ax.contour(np.arange(x0, xN + 1e-12, dx), np.arange(y0, yN + 1e-12, dy), G[:, :, frame].T, levels=[0.0], colors='black')
     return [im]
 
 ani = FuncAnimation(
