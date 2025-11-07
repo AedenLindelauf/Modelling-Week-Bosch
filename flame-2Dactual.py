@@ -21,11 +21,11 @@ else:
 
 
 # --- Domain discretization ---
-x0, xN, dx = 0.0, 0.3, 0.005
-y0, yN, dy = 0.0, 0.3, 0.005
-t_final, dt = 1.0, 0.002
-radius = 0.14
-centre = (xN - x0) / 2
+x0, xN, dx = 0.0, 0.5, 0.01
+y0, yN, dy = 0.0, 0.5, 0.01
+t_final, dt = 5.0, 0.005
+radii = [0.15] 
+centres = [0.25]
 
 # --- Build grids ---
 x = np.arange(x0, xN + 1e-12, dx)
@@ -36,10 +36,11 @@ Nt = int(round(t_final / dt)) + 1
 G = np.zeros((Nx, Ny, Nt))
 
 # --- Constants ---
-St = 10
+omega_u = 10
+omega_phi = 10
 K = 5
-eps_a = 0.2
-eps_phi = -eps_a
+eps_a = 0.1
+eps_phi = -0.1
 
 # --- Equivalence ratio ---
 PHI = 0.5
@@ -49,7 +50,7 @@ for n in range(Nt):
     for j in range(Ny):
         for i in range(Nx):
             y_ = j * dy
-            phi[i, j, n] = PHI * (1 + eps_phi * np.sin(St * (t - y_)))
+            phi[i, j, n] = PHI * (1 + eps_phi * np.sin(omega_phi * (t - y_)))
 
 # --- Flame speed constant used to compute M (steady solution) ---
 s_L_constant = get_s_L(PHI)
@@ -62,8 +63,8 @@ u_y_full = np.zeros((Nx, Ny, Nt))
 for i in range(Nx):
     for j in range(Ny):
         y_ = j * dy
-        u_y[i, j] = U * (1 + eps_a * np.sin(St * (0 - K * y_)))
-        u_y_full[i, j, 0] = U * (1 + eps_a * np.sin(St * (0 - K * y_)))
+        u_y[i, j] = U * (1 + eps_a * np.sin(omega_u * (0 - K * y_)))
+        u_y_full[i, j, 0] = U * (1 + eps_a * np.sin(omega_u * (0 - K * y_)))
 
 # compute slope M so that s_L * sqrt(M^2 + 1) = U
 # (make sure U/s_L_constant >= 1)
@@ -75,7 +76,13 @@ print("Using M =", M)
 # Set initial field to steady analytic solution: G(x,y) = M*(x - radius) + y
 for i in range(Nx):
     for j in range(Ny):
-        G[i, j, 0] = M * (abs(x[i] - centre) - radius) + y[j]
+        G[i, j, 0] = 1.0
+for i in range(Nx):
+    possible_minimums = [(M * (abs(i*dx - c) - r)) for c in centres for r in radii]
+    G[i, 0, 0] = min(possible_minimums)
+    #for j in range(Ny):
+        #G[i, j, 0] = M * (abs(x[i] - centre) - radius) + y[j]
+        #G[i,j,0] = min(possible_minimums) + y[j]
 
 # --- Boundary conditions helper:
 # bottom (y=0): Dirichlet (inflow)
@@ -83,14 +90,18 @@ for i in range(Nx):
 def apply_bcs(G_slice):
     # bottom (inflow): Dirichlet
     M = np.sqrt((u_y[0, 0] / s_L_constant) ** 2 - 1.0)
+    #for ii in range(Nx):
+        #G_slice[ii, 0] = M * (abs(x[ii] - centre) - radius) + 0.0
     for ii in range(Nx):
-        G_slice[ii, 0] = M * (abs(x[ii] - centre) - radius) + 0.0
+        possible_minimums = [M * (abs(ii*dx - c) - r) for c in centres for r in radii]
+        G_slice[ii, 0] = min(possible_minimums)
 
     # copy right half from left half
-    for jj in range(Ny):
-        for ii in range(Nx // 2):
-            G_slice[Nx - ii - 1, jj] = G_slice[ii, jj]
-            G_slice[Nx - ii - 1, jj] = G_slice[ii, jj]
+    """for k in range(len(centres)):
+        for jj in range(Ny):
+            for ii in range(round((radii[k])/dx)):
+                G_slice[round(centres[k]/dx) + 1 + ii, jj] = G_slice[round(centres[k]/dx) - ii, jj]
+                #G_slice[Nx - ii - 1, jj] = G_slice[ii, jj]"""
 
 # Apply BCs at initial time (t=0)
 apply_bcs(G[:, :, 0])
@@ -111,29 +122,34 @@ for n in range(1, Nt):
     for j in range(Ny):
         for i in range(Nx):
             y_ = j * dy
-            u_y[i, j] = U * (1 + eps_a * np.sin(St * (t - K * y_)))
+            u_y[i, j] = U * (1 + eps_a * np.sin(omega_u * (t - K * y_)))
             #u_y[i, j] = s_L_constant + (U - s_L_constant) * (2 ** -t)
             u_y_full[i, j, n] = u_y[i, j]
     
     # apply Dirichlet on bottom inflow for this new time slice (makes sure inflow is enforced)
     M = np.sqrt((u_y[0, 0] / s_L_constant) ** 2 - 1.0)
+    #for ii in range(Nx):
+        #G_new[ii, 0] = M * (abs(x[ii] - centre) - radius) + 0.0
     for ii in range(Nx):
-        G_new[ii, 0] = M * (abs(x[ii] - centre) - radius) + 0.0
+        possible_minimums = [M * abs(ii*dx - c) - r for c in centres for r in radii]
+        G_new[ii, 0] = min(possible_minimums)
 
     # interior points update (i indexes x, j indexes y)
     for j in range(1, Ny):       # avoid top row (Ny-1) because we treat it as outflow
         for i in range(1, Nx - 1):   # avoid left (0) and right (Nx-1)
             # upwind/backward differences because u_x >= 0? here u_x == 0 so dx contribution zero
             # but implement general form:
-            if u_x[i, j] >= 0:
+            x_ = i * dx
+            nearest_flame_centre = 1e10
+            for c in centres:
+                if abs(x_ - c) < nearest_flame_centre:
+                    nearest_flame_centre = x_ - c
+
+            if nearest_flame_centre < 0:
                 dGdx = (G_prev[i, j] - G_prev[i - 1, j]) / dx
             else:
                 dGdx = (G_prev[i + 1, j] - G_prev[i, j]) / dx
-
-            if u_y[i, j] >= 0:
-                dGdy = (G_prev[i, j] - G_prev[i, j - 1]) / dy
-            else:
-                dGdy = (G_prev[i, j + 1] - G_prev[i, j]) / dy
+            dGdy = (G_prev[i, j] - G_prev[i, j - 1]) / dy
 
             # local laminar flame speed (using phi at previous time)
             s_L = get_s_L(phi[i, j, n - 1])
@@ -220,7 +236,7 @@ def update(frame):
     global contour
     contour.remove()
     im.set_data(G[:, :, frame].T)
-    ax.set_title(f"G(x,y,t={round(frame * dt, 4)})")
+    ax.set_title("G(x,y,t=%.3f" % (frame * dt))
     contour = ax.contour(np.arange(x0, xN + 1e-12, dx), np.arange(y0, yN + 1e-12, dy), G[:, :, frame].T, levels=[0.0], colors='black')
     return [im]
 
