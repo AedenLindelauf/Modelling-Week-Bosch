@@ -2,7 +2,7 @@
 ---
 **Participants: Bas Wijnsma, Justin van der Bijl, Pax Mallee, Domantas Stanys, Aeden Lindelauf**
 
-This repository contains the progrms that were developed during the modelling week for Bosch Thermotechnology. The problem description can be found in ..., which was written by Nijso Beishuizen. During this week, several different approaches were explored based, amongst others, on the following works:
+This repository contains the progrms that were developed during the modelling week for Bosch Thermotechnology. The problem description can be found in [here]([https://github.com/AedenLindelauf/Modelling-Week-Bosch/blob/main/other_file.md](https://github.com/AedenLindelauf/Modelling-Week-Bosch/blob/main/Bosch%20-%20Predictive%20low-order%20modeling%20of%20thermo-acoustic%20response%20in%20conical%20flames.pdf)), which was written by Nijso Beishuizen. During this week, several different approaches were explored based, amongst others, on the following works:
 
 - https://journals.sagepub.com/doi/epub/10.1177/17568277241237068,
 - https://www.sciencedirect.com/science/article/pii/S0360319925007372?via%3Dihub,
