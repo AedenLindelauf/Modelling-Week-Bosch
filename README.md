@@ -11,7 +11,7 @@ This repository contains the progrms that were developed during the modelling we
 
 The programs in this repository can be divided into three main parts (and their corresponding programs):
 
-1. Modelling of the thermoacoustic interaction based on an analytical solution to a linearised version of the problem.
+1. Modelling of the thermoacoustic interaction based on an analytical solution to a linearised version of the problem. And using this simulation to obtain the Flame transfer function.
    - [Transfer Function](Transfer%20Function.py)
 
 2. Using numerical methods to approximately solve the $G$-equation.
