@@ -7,15 +7,16 @@ This repository contains the programs that were developed during the modelling w
 - https://journals.sagepub.com/doi/epub/10.1177/17568277241237068,
 - https://www.sciencedirect.com/science/article/pii/S0360319925007372?via%3Dihub,
 - https://www.sciencedirect.com/science/article/pii/S1540748916300608,
-- https://www.sciencedirect.com/science/article/pii/S0010218003000427.
+- https://www.sciencedirect.com/science/article/pii/S0010218003000427,
+- https://mediatum.ub.tum.de/doc/1510122/1510122.pdf
 
 The programs in this repository can be divided into three main categories, each with their own corresponding programs:
 
-1. Modelling of the thermoacoustic interaction based on an analytical solution to a linearised version of the problem. This simulation is then used to obtain the Flame Transfer Function (FTF).
-   - [Flame Transfer Function](Simulate%20FTF.py)
+1. Modelling of the thermoacoustic interaction based on an analytical solution to a linearised version of the problem. This simulation is then used to obtain the Flame Transfer Function (FTF): [Flame Transfer Function](Simulate%20FTF.py)
 
-2. Approximately solving the $G$-equation using numerical methods.
+2. Approximately solving the $G$-equation using numerical methods: [Flame-2D](Flame-2D.py)
 
 
-3. The results of the two previous programmes are used to analyse the stability of the burner configuration and to optimise the burner setup in terms of the convective speed and the location of the fuel injector.
-   - [Stability Analysis](Stability%20Analysis.ipynb)
+3. The results of the two previous programmes are used to analyse the stability of the burner configuration and to optimise the burner setup in terms of the convective speed and the location of the fuel injector: [Stability Analysis](Stability%20Analysis.ipynb)
+
+Furthermore, the [Data](Data/) directory contains several transfer functions in the standard binary file format in Numpy. 
