@@ -2,20 +2,20 @@
 ---
 **Participants: Bas Wijnsma, Justin van der Bijl, Pax Mallee, Domantas Stanys, Aeden Lindelauf**
 
-This repository contains the progrms that were developed during the modelling week for Bosch Thermotechnology. The problem description can be found in [here](Bosch%20-%20Predictive%20low-order%20modeling%20of%20thermo-acoustic%20response%20in%20conical%20flames.pdf), which was written by Nijso Beishuizen. During this week, several different approaches were explored based, amongst others, on the following works:
+This repository contains the programs that were developed during the modelling week for Bosch Thermotechnology. The problem description can be found [here](Bosch%20-%20Predictive%20low-order%20modeling%20of%20thermo-acoustic%20response%20in%20conical%20flames.pdf), written by Nijso Beishuizen. For this project, several different approaches were explored, based, amongst others, on the following works:
 
 - https://journals.sagepub.com/doi/epub/10.1177/17568277241237068,
 - https://www.sciencedirect.com/science/article/pii/S0360319925007372?via%3Dihub,
 - https://www.sciencedirect.com/science/article/pii/S1540748916300608,
 - https://www.sciencedirect.com/science/article/pii/S0010218003000427.
 
-The programs in this repository can be divided into three main parts (and their corresponding programs):
+The programs in this repository can be divided into three main categories, each with their own corresponding programs:
 
-1. Modelling of the thermoacoustic interaction based on an analytical solution to a linearised version of the problem. And using this simulation to obtain the Flame transfer function.
-   - [Flame Transfer Function](Simulate_FTF.py)
+1. Modelling of the thermoacoustic interaction based on an analytical solution to a linearised version of the problem. This simulation is then used to obtain the Flame Transfer Function (FTF).
+   - [Flame Transfer Function](Simulate%20FTF.py)
 
-2. Using numerical methods to approximately solve the $G$-equation.
+2. Approximately solving the $G$-equation using numerical methods.
 
 
-3. Using the results of either of the two previous programs to analyse the stability of the burner configuration and optimising a burner setup for the convective speed and fuel injector location.
+3. The results of the two previous programmes are used to analyse the stability of the burner configuration and to optimise the burner setup in terms of the convective speed and the location of the fuel injector.
    - [Stability Analysis](Stability%20analysis.ipynb)
