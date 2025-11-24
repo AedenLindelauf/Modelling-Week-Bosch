@@ -18,5 +18,3 @@ The programs in this repository can be divided into three main categories, each 
 
 
 3. The results of the two previous programmes are used to analyse the stability of the burner configuration and to optimise the burner setup in terms of the convective speed and the location of the fuel injector: [Stability Analysis](Stability%20Analysis.ipynb)
-
-Furthermore, the [Data](Data/) directory contains several transfer functions in the standard binary file format in Numpy. 
