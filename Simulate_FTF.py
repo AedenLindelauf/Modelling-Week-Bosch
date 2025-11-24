@@ -7,12 +7,12 @@ from pathlib import Path
 from numba import njit, prange
 
 # ---- User settings ----
-N_CPUS = 32                # Number of CPUs for the cluster
+N_CPUS = 32                # Number of CPUs for multithreading
 SAVE_EVERY = 20            # Save every N frequencies
 OUTDIR = Path("results")
 OUTDIR.mkdir(exist_ok=True)
 
-# Sampling parameters
+# Sampling parameters change for faster simulation or accuracy
 n_periods = 2000
 n_samples = 10000
 
@@ -21,12 +21,8 @@ nx = 200
 ny = 200
 x = np.linspace(0, 1, nx)
 
-# Frequency range
+# Frequency range of perturbation (scales differently then the output frequency) 
 omegas = np.linspace(104,2500,5000)
-
-# maxima for H2 omegas = np.linspace(104,104+1*(2653-104)/276*999,1000)  np.linspace(104,104+700*(2653-104)/276*999,1000)
-# maxima for methane omegas = np.linspace(141,141+(3964-141)/65*(1650),1651)  
-
 
 # Constants should not matter as the FTF is normalized by Q_bar
 rho = 1.0
@@ -122,7 +118,7 @@ def process_single_omega(omega, params):
     FTF = FTF_u /N  # <- no extra / N?
 
     mags = np.abs(FTF_u)
-    idx_max = np.argmax(mags[1:]) + 1 if len(mags) > 1 else 0
+    idx_max = np.argmax(mags[1:]) + 1 if len(mags) > 1 else 0 #change 1 to maybe 100 if many times omega ~0
     max_out = FTF[idx_max]
     max_freq = tf[idx_max]
     
@@ -166,9 +162,9 @@ def run_for_gas(gas_label, s_L_value, v1_value, save_prefix, n_cpus=N_CPUS):
             trans[j, :] = np.array([omega_val, max_freq, max_out])
 
 
-
+    
             if j % SAVE_EVERY == 0:
-                np.save(OUTDIR / f"{save_prefix}_ftfs_partial.npy", ftfs)
+                np.save(OUTDIR / f"{save_prefix}_ftfs_partial.npy", ftfs) 
                 np.save(OUTDIR / f"{save_prefix}_trans.npy", trans)
 
     # Final save
