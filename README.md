@@ -12,5 +12,10 @@ This repository contains the progrms that were developed during the modelling we
 The programs in this repository can be divided into three main parts (and their corresponding programs):
 
 1. Modelling of the thermoacoustic interaction based on an analytical solution to a linearised version of the problem.
+   - [Transfer Function](Transfer%20Function.py)
+
 2. Using numerical methods to approximately solve the $G$-equation.
-3. Using the results of either of the two previous programs to analyse the stability of the burner configuration and optimising a burner setup for the convective speed and fuel injector location. 
+
+
+3. Using the results of either of the two previous programs to analyse the stability of the burner configuration and optimising a burner setup for the convective speed and fuel injector location.
+   - [Stability Analysis](Stability%20analysis.ipynb)
